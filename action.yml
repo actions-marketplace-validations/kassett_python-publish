@@ -76,43 +76,38 @@ inputs:
     default: ''
     required: false
 
-  twine-username:
+  pypi-username:
     description: 'Username for pypi.org. Defaults to __token__.'
     required: false
     default: '__token_'
 
-  twine-password:
+  pypi-username-env-name:
+    description: 'Password for pypi.org.'
+    required: false
+    default: ''
+
+  pypi-password:
     description: 'Auth Key or Password for pypi.org.'
     required: false
     default: ''
-  twine-password-env-name:
-    description: 'The name of the environment variable in which the Twine password resides.'
+  pypi-password-env-name:
+    description: 'The name of the environment variable in which the PyPI password resides.'
     required: false
-
-
-  poetry-username:
-    description: 'Username for pypi.org.'
-    required: false
-    default: ''
-  poetry-password:
-    description: 'Auth Key or Password for poetry repo.'
-    required: false
-    default: ''
 
 
 runs:
   using: composite
   steps:
       # Install docker if the client has specified the value as 'true'
-#    - name: Install Docker Compose
-#      if: ${{ inputs.install-docker != 'false' }}
-#      uses: ndeloof/install-compose-action@v0.0.1
-#      with:
-#        version: v2.1.0
-#
-#    - name: Set up Docker Buildx
-#      if: ${{ inputs.install-docker != 'false' }}
-#      uses: docker/setup-buildx-action@v2
+    - name: Install Docker Compose
+      if: ${{ inputs.install-docker != 'false' }}
+      uses: ndeloof/install-compose-action@v0.0.1
+      with:
+        version: v2.1.0
+
+    - name: Set up Docker Buildx
+      if: ${{ inputs.install-docker != 'false' }}
+      uses: docker/setup-buildx-action@v2
 
     - name: Export Python Path
       if: ${{ inputs.python-path != '' }}
@@ -131,21 +126,19 @@ runs:
       with:
         node-version: 20
 
-#      # Assume AWS Role
-#    - name: Assume AWS Role
-#      if: ${{ inputs.aws-role != '' && inputs.aws-region != '' }}
-#      uses: aws-actions/configure-aws-credentials@v4
-#      with:
-#        aws-region: ${{ inputs.aws-region }}
-#        role-to-assume: ${{ inputs.aws-role }}
-#
-#    - name: Grab AWS Keys
-#      if: ${{ inputs.aws-keys != '' }}
-#      uses: aws-actions/aws-secretsmanager-get-secrets@v1
-#      with:
-#        secret-ids: ${{ inputs.aws_keys }}
-#        parse-json-secrets: true
-        
+    - name: Assume AWS Role
+      if: ${{ inputs.aws-role != '' && inputs.aws-region != '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws-region }}
+        role-to-assume: ${{ inputs.aws-role }}
+
+    - name: Grab AWS Keys
+      if: ${{ inputs.aws-keys != '' }}
+      uses: aws-actions/aws-secretsmanager-get-secrets@v1
+      with:
+        secret-ids: ${{ inputs.aws_keys }}
+        parse-json-secrets: true
 
     - name: Build Virtual Env
       shell: bash
@@ -187,54 +180,74 @@ runs:
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
 
-    - name: Print Env
+    - name: Install dependencies command
+      if: ${{ env.KASSETT_INSTALL_DEPENDENCIES_COMMAND != '' }}
       shell: python
       run: |
         import os
-        print(os.environ)
+        import subprocess
+        command = "source venv/bin/activate && " + os.environ.get("KASSETT_INSTALL_DEPENDENCIES_COMMAND")
+        subprocess.run(args=command, shell=True, check=True)
+        
 
-#    - name: Install dependencies command
-#      if: ${{ inputs.install-dependencies-command != '' }}
-#      shell: python
-#      run: |
-#        import os
-#        import subprocess
-#        command = "source venv/bin/activate && " + os.environ.get("DEPENDENCIES_COMMAND")
-#        subprocess.run(args=command, shell=True, check=True)
-#      env:
-#        DEPENDENCIES_COMMAND: inputs.install-dependencies-command
-#
-#    - name: Run test command
-#      if: ${{ inputs.test-command != '' }}
-#      shell: venv/bin/activate
-#      run: |
-#        import os
-#        import subprocess
-#        subprocess.run(args=os.environ.get("TEST_COMMAND"), shell=True, check=True)
-#      env:
-#        TEST_COMMAND: inputs.test-command
-#
-#    - name: Build Dependencies for Twine
-#      if: ${{ inputs.publish-package-using == 'twine' && inputs.custom-build-command == '' }}
-#      shell: bash
-#      run: |
-#        source venv/bin/activate
-#        pip install twine wheel setuptools
-#
-#    - name: Build Twine
-#      if: ${{ inputs.publish-package-using == 'twine' && inputs.custom-build-command == '' }}
-#      shell: bash
-#      run: |
-#        source venv/bin/activate
-#        python setup.py sdist bdist_wheel
-#
-#    - name: Upload Twine
-#      if: ${{ inputs.publish-package-using == 'twine' }}
-#      shell: bash
-#      run: |
-#        twine upload dist/*
-#      env:
-#        TWINE_USERNAME: ${{ inputs.
+    - name: Run test command
+      if: ${{ env.KASSETT_TEST_COMMAND != '' }}
+      shell: python
+      run: |
+        import os
+        import subprocess
+        command = "source venv/bin/activate ; " + os.environ.get("KASSETT_TEST_COMMAND")
+        subprocess.run(args=command, shell=True, check=True)
+
+    - name: Build Dependencies for Twine
+      if: ${{ env.KASSETT_PUBLISH_PACKAGE_USING == 'twine' && env.KASSETT_CUSTOM_BUILD_COMMAND == '' }}
+      shell: bash
+      run: |
+        source venv/bin/activate
+        pip install twine wheel setuptools
+
+    - name: Build Twine
+      if: ${{ env.KASSETT_PUBLISH_PACKAGE_USING == 'twine' && env.KASSETT_CUSTOM_BUILD_COMMAND == '' }}
+      shell: bash
+      run: |
+        source venv/bin/activate
+        python setup.py sdist bdist_wheel
+
+    - name: Custom Build
+      if: ${{ env.KASSETT_CUSTOM_BUILD_COMMAND != '' }}
+      shell: python
+      run: |
+        import os
+        import subprocess
+        command = "source venv/bin/activate ; " + os.environ.get("KASSETT_CUSTOM_BUILD_COMMAND")
+        subprocess.run(args=command, shell=True, check=True)
+
+    - name: Upload Twine
+      if: ${{ env.KASSETT_PUBLISH_PACKAGE_USING == 'twine' }}
+      shell: bash
+      run: |
+        source venv/bin/activate
+        twine upload dist/*
+      env:
+        TWINE_USERNAME: ${{ env.KASSETT_PYPI_USERNAME }}
+        TWINE_REPOSITORY: ${{ env.KASSETT_PYPI_REPO_URL }}
+        TWINE_PASSWORD: ${{ env.KASSETT_PYPI_PASSWORD }}
+
+    - name: Upload Poetry
+      if: ${{ env.KASSETT_PUBLISH_PACKAGE_USING == 'poetry' && env.KASSETT_CUSTOM_BUILD_COMMAND == '' }}
+      shell: bash
+      run: |
+        source venv/bin/activate
+        poetry config repositories.prod ${REPOSITORY_URL}
+        poetry config http-basic.${REPOSITORY_NAME} ${REPOSITORY_USERNAME} ${REPOSITORY_PASSWORD}
+        (yes || true) | poetry publish --build --repository ${REPOSITORY_NAME}
+      env:
+        REPOSITORY_NAME: ${{ env.KASSETT_PYPI_REPO_NAME }}
+        REPOSITORY_URL: ${{ env.KASSETT_PYPI_REPO_URL }}
+        REPOSITORY_USERNAME: ${{ env.KASSETT_PYPI_USERNAME }}
+        REPOSITORY_PASSWORD: ${{ env.KASSETT_PYPI_PASSWORD }}
+
+
     
     
 
