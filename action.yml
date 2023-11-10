@@ -183,7 +183,7 @@ runs:
           if k != "KASSETT_INPUTS":
             new_env_variables[k] = v
         for k, v in new_env_variables.items():
-          command = 'echo "{}={}" >> {}'.format(k, v, os.environ.get("GITHUB_ENV"))
+          command = 'echo "{}=\"{}\"" >> {}'.format(k, v, os.environ.get("GITHUB_ENV"))
           subprocess.run(args=command, shell=True, check=True)
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
