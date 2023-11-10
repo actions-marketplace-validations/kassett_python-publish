@@ -182,10 +182,11 @@ runs:
             new_env_variables[k] = v
         
         env_file = os.getenv('GITHUB_ENV')
+        print(os.getenv('GITHUB_ENV'))
 
         with open(env_file, "a") as f:
             for k, v in new_env_variables.items():
-                f.write("{}={}".format(k, v))
+                f.write("{}: {}".format(k, v))
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
 
