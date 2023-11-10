@@ -186,7 +186,7 @@ runs:
       
         lines = ["{}: {}".format(k, v) for k, v in new_env_variables.items()]
         with open(env_file, "a") as f:
-            f.write("\n".split(lines))
+            f.write("\n".join(lines))
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
 
