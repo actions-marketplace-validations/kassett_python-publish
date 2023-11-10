@@ -1,0 +1,135 @@
+name: 'Run Pythonic CI/CD'
+description: 'Generic CI/CD Steps for simplifying deploying a Python SDK'
+branding:
+  icon: 'arrow-right-circle'
+  color: 'gray-dark'
+inputs:
+  aws-secrets:
+    description: 'Extract AWS secrets as variables.'
+    required: false
+  export-aws-secrets-to-environment:
+    description: 'AWS Secrets will be exported to the CI/CD environment.'
+    required: false
+  python-path:
+    description: 'Export the PYTHONPATH environment variable to to the CI/CD environment.'
+    required: false
+    default: ''
+  test-command:
+    description: 'Run a command that will execute the tests in your environment.'
+    required: false
+  install-dependencies-command:
+    description: 'Run the command required to build the Python dependencies.'
+    required: false
+  build-package-using-twine:
+    description: 'Build the Python SDK using twine.'
+    required: false
+  install-docker:
+    description: 'Use this to install Docker and Docker Compose. Pass "true"'
+    required: false
+    default: "false"
+  publish-package-using:
+    description: 'Whether you should use twine or poetry.'
+    required: false
+    default: ''
+  twine-repo-url:
+    description: 'Defaults to https://pypi.org.'
+    required: false
+    default: "https://pypi.org"
+  twine-password:
+    description: 'Auth Key or Password for pypi.org.'
+    required: false
+    default: none
+  python-version:
+    description: 'The description of the Python version to be used. For now it must be supported by setup-python3'
+    default: "3.9"
+    required: false
+  twine-username:
+    description: 'Username for pypi.org. Defaults to __token__.'
+    required: false
+    default: '__token_'
+  poetry-repo-url:
+    description: 'Defaults to https://pypi.org.'
+    required: false
+    default: "https://pypi.org"
+  poetry-password:
+    description: 'Auth Key or Password for poetry repo.'
+    required: false
+    default: none
+  poetry-username:
+    description: 'Username for pypi.org.'
+    required: false
+    default: none
+  aws-role:
+    description: 'AWS role to assume.'
+    default: none
+    required: false
+  aws-role-region:
+    description: 'AWS role region.'
+    default: none
+    required: false
+
+
+runs:
+  using: composite
+  steps:
+
+      # Install docker if the client has specified the value as 'true'
+    - name: Install Docker Compose
+      if: ${{ inputs.install-docker != 'false' }}
+      uses: ndeloof/install-compose-action@v0.0.1
+      with:
+        version: v2.1.0
+
+    - name: Set up Docker Buildx
+      if: ${{ inputs.install-docker != 'false' }}
+      uses: docker/setup-buildx-action@v2
+
+    - name: Export Python Path
+      if: ${{ inputs.python-path != '' }}
+      run:
+        export PYTHONPATH="${PYTHONPATH}"
+      shell: bash
+      env:
+        PYTHONPATH: ${{ inputs.python-path }}
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Set up Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+      # Assume AWS Role
+    - name: Assume AWS Role
+      if: ${{ inputs.aws-role != '' && inputs.aws-region != '' }}
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.aws-region }}
+        role-to-assume: ${{ inputs.aws-role }}
+
+    - name: Build Virtual Env
+      shell: bash
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        python -m pip install --upgrade pip
+        pip install poetry
+
+    - name: Run test command
+      if: ${{ inputs.test-command != '' }}
+      shell: venv/bin/activate
+      run: |
+        import os
+        import subprocess
+        subprocess.run(args=os.environ.get("TEST_COMMAND"), shell=True, check=True)
+      env:
+        TEST_COMMAND: inputs.test-command
+
+
+    
+    
+
+
