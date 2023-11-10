@@ -123,7 +123,7 @@ runs:
 
     - name: Install jq
       run:
-        apt-get install jq
+        sudo apt-get install jq
       shell: bash
 
     - name: Set up Python 3.9
