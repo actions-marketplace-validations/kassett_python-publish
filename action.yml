@@ -79,7 +79,7 @@ inputs:
   pypi-username:
     description: 'Username for pypi.org. Defaults to __token__.'
     required: false
-    default: '__token_'
+    default: '__token__'
 
   pypi-username-env-name:
     description: 'Password for pypi.org.'
@@ -184,7 +184,7 @@ runs:
         env_file = os.getenv('GITHUB_ENV')
         print(os.getenv('GITHUB_ENV'))
       
-        lines = ["{}: {}".format(k, v) for k, v in new_env_variables.items()]
+        lines = ["{}={}".format(k, v) for k, v in new_env_variables.items()]
         with open(env_file, "a") as f:
             f.write("\n".join(lines))
       env:
