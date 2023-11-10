@@ -159,9 +159,10 @@ runs:
       shell: bash
       run: |
         source venv/bin/activate
-        $b=$(echo ${{inputs}})
-        z=$(python <(echo 'import sys ; print(sys.argv[1])') "$@" "$b")
+        z=$(python <(echo 'import sys ; import os ; print(os.environ.get("ALL_INPUTS")') "$@" )
         echo $z
+      env:
+        ALL_INPUTS: ${{toJSON(inputs)}}
 
 #    - name: Install dependencies command
 #      if: ${{ inputs.install-dependencies-command != '' }}
