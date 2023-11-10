@@ -149,9 +149,6 @@ runs:
           ${{ inputs.aws-keys }}
         parse-json-secrets: true
 
-    - name:
-
-
     - name: Echo value
       shell: bash
       run: |
