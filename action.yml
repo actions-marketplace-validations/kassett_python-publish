@@ -149,6 +149,8 @@ runs:
           ${{ inputs.aws-keys }}
         parse-json-secrets: true
 
+    - name:
+
 
     - name: Echo value
       shell: bash
@@ -160,7 +162,6 @@ runs:
       run: |
         import os
         import json
-        import subprocess
         
         inputs = json.loads(os.environ.get("KASSETT_INPUTS"))
         keys = [x for x in inputs.keys() if x.endswith("-env-name")]
@@ -182,9 +183,12 @@ runs:
         for k, v in os.environ.items():
           if k != "KASSETT_INPUTS":
             new_env_variables[k] = v
-        for k, v in new_env_variables.items():
-          command = 'echo "{}=\"{}\"" >> {}'.format(k, v, os.environ.get("GITHUB_ENV"))
-          subprocess.run(args=command, shell=True, check=True)
+        
+        env_file = os.getenv('GITHUB_ENV')
+
+        with open(env_file, "a") as f:
+            for k, v in new_env_variables.items():
+                f.write("{}={}".format(k, v))
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
 
