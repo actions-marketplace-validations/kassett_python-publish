@@ -137,7 +137,8 @@ runs:
       if: ${{ inputs.aws-keys != '' }}
       uses: aws-actions/aws-secretsmanager-get-secrets@v1
       with:
-        secret-ids: ${{ inputs.aws_keys }}
+        secret-ids: |
+          ${{ inputs.aws_keys }}
         parse-json-secrets: true
 
     - name: Build Virtual Env
