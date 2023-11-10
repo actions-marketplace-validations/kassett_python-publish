@@ -168,10 +168,12 @@ runs:
           if os.environ.get(new_key, None) is not None:
             del inputs[new_key]
         for k, v in inputs.items():
+          if k == "aws-secrets":
+            continue
           new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
           new_env_variables[new_key] = v
         for k, v in os.environ.items():
-          if k != "KASSETT_INPUTS":
+          if k != "KASSETT_INPUTS" and k:
             new_env_variables[k] = v
 
         with open(os.getenv('GITHUB_ENV'), "w") as f:
