@@ -4,94 +4,127 @@ branding:
   icon: 'arrow-right-circle'
   color: 'gray-dark'
 inputs:
-  aws-secrets:
-    description: 'Extract AWS secrets as variables.'
-    required: false
-  export-aws-secrets-to-environment:
-    description: 'AWS Secrets will be exported to the CI/CD environment.'
-    required: false
-  python-path:
-    description: 'Export the PYTHONPATH environment variable to to the CI/CD environment.'
-    required: false
-    default: ''
-  test-command:
-    description: 'Run a command that will execute the tests in your environment.'
-    required: false
-  install-dependencies-command:
-    description: 'Run the command required to build the Python dependencies.'
-    required: false
-    default: ''
-  build-package-using-twine:
-    description: 'Build the Python SDK using twine.'
-    required: false
-  install-docker:
-    description: 'Use this to install Docker and Docker Compose. Pass "true"'
-    required: false
-    default: "false"
-  publish-package-using:
-    description: 'Whether you should use twine or poetry.'
-    required: false
-    default: ''
-  twine-repo-url:
-    description: 'Defaults to https://pypi.org.'
-    required: false
-    default: "https://pypi.org"
-  twine-password:
-    description: 'Auth Key or Password for pypi.org.'
-    required: false
-    default: none
   python-version:
     description: 'The description of the Python version to be used. For now it must be supported by setup-python3'
     default: "3.9"
     required: false
+
+  install-docker:
+    description: 'Installation of Docker and Docker Compose.'
+    required: false
+    default: "false"
+
+  connect-to-vpn:
+    description: 'The name of the VPN to connect. All OpenVPN compliant VPNs are supports, as well as Tailscale.'
+    required: false
+    default: ''
+
+  aws-role:
+    description: 'AWS role to assume.'
+    default: ''
+    required: false
+  aws-role-region:
+    description: 'AWS role region.'
+    default: ''
+    required: false
+
+  aws-secrets:
+    description: 'Extract AWS secrets as variables.'
+    required: false
+    default: ''
+
+  python-path:
+    description: 'Export the PYTHONPATH environment variable to to the CI/CD environment.'
+    required: false
+    default: ''
+
+  install-dependencies-command:
+    description: 'A custom command to install the dependencies. Recommended to use a Makefile target.'
+    required: false
+    default: ''
+  test-command:
+    description: 'A custom command to run tests. Recommended to use a Makefile target.'
+    required: false
+    default: ''
+  custom-build-command:
+    description: 'A custom command to build the package. This will not skip the upload step. Recommended to use a Makefile target.'
+    default: ''
+    required: false
+
+  publish-package-using:
+    description: 'The name of the build method. Currently supports Twine and Poetry.'
+    required: false
+    default: ''
+
+  pypi-repo-url:
+    description: 'The url for the PyPI repo. Defaults to https://pypi.org/'
+    default: "https://pypi.org/"
+    required: false
+
+  pypi-repo-url-env-name:
+    description: "The name of the environment variables that contains the PyPI url."
+    default: ''
+    required: false
+
+  pypi-repo-name:
+    description: "The name of the PyPI repo."
+    default: ''
+    required: false
+
+  pypi-repo-name-env-name:
+    description: "The environment variable that contains the name of the PyPI repo."
+    default: ''
+    required: false
+
   twine-username:
     description: 'Username for pypi.org. Defaults to __token__.'
     required: false
     default: '__token_'
-  poetry-repo-url:
-    description: 'Defaults to https://pypi.org.'
+
+  twine-password:
+    description: 'Auth Key or Password for pypi.org.'
     required: false
-    default: "https://pypi.org"
-  poetry-password:
-    description: 'Auth Key or Password for poetry repo.'
+    default: ''
+  twine-password-env-name:
+    description: 'The name of the environment variable in which the Twine password resides.'
     required: false
-    default: none
+
+
   poetry-username:
     description: 'Username for pypi.org.'
     required: false
-    default: none
-  aws-role:
-    description: 'AWS role to assume.'
-    default: none
+    default: ''
+  poetry-password:
+    description: 'Auth Key or Password for poetry repo.'
     required: false
-  aws-role-region:
-    description: 'AWS role region.'
-    default: none
-    required: false
+    default: ''
 
 
 runs:
   using: composite
   steps:
-
       # Install docker if the client has specified the value as 'true'
-    - name: Install Docker Compose
-      if: ${{ inputs.install-docker != 'false' }}
-      uses: ndeloof/install-compose-action@v0.0.1
-      with:
-        version: v2.1.0
-
-    - name: Set up Docker Buildx
-      if: ${{ inputs.install-docker != 'false' }}
-      uses: docker/setup-buildx-action@v2
+#    - name: Install Docker Compose
+#      if: ${{ inputs.install-docker != 'false' }}
+#      uses: ndeloof/install-compose-action@v0.0.1
+#      with:
+#        version: v2.1.0
+#
+#    - name: Set up Docker Buildx
+#      if: ${{ inputs.install-docker != 'false' }}
+#      uses: docker/setup-buildx-action@v2
 
     - name: Export Python Path
       if: ${{ inputs.python-path != '' }}
-      run:
-        export PYTHONPATH="${PYTHONPATH}"
+      run: echo "PYTHONPATH=$(echo '$PYTHONPATH' | cut -c 1-6)" >> $GITHUB_ENV
       shell: bash
       env:
         PYTHONPATH: ${{ inputs.python-path }}
+
+    - name: Install jq
+      run:
+        apt-get install jq
+      shell: bash
 
     - name: Set up Python 3.9
       uses: actions/setup-python@v3
@@ -103,13 +136,26 @@ runs:
       with:
         node-version: 20
 
-      # Assume AWS Role
-    - name: Assume AWS Role
-      if: ${{ inputs.aws-role != '' && inputs.aws-region != '' }}
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ inputs.aws-region }}
-        role-to-assume: ${{ inputs.aws-role }}
+#      # Assume AWS Role
+#    - name: Assume AWS Role
+#      if: ${{ inputs.aws-role != '' && inputs.aws-region != '' }}
+#      uses: aws-actions/configure-aws-credentials@v4
+#      with:
+#        aws-region: ${{ inputs.aws-region }}
+#        role-to-assume: ${{ inputs.aws-role }}
+#
+#    - name: Grab AWS Keys
+#      if: ${{ inputs.aws-keys != '' }}
+#      uses: aws-actions/aws-secretsmanager-get-secrets@v1
+#      with:
+#        secret-ids: ${{ inputs.aws_keys }}
+#        parse-json-secrets: true
+
+    - name: Define ENV Variables
+      shell: bash
+      run: |
+        $z
+        
 
     - name: Build Virtual Env
       shell: bash
@@ -119,28 +165,56 @@ runs:
         python -m pip install --upgrade pip
         pip install poetry
 
-    - name: Install dependencies command
-      if: ${{ inputs.install-dependencies-command != '' }}
-      shell: python
+    - name: Export ENV Variables
+      shell: bash
       run: |
-        import os
-        import subprocess
-        command = "source venv/bin/activate && " + os.environ.get("DEPENDENCIES_COMMAND")
-        subprocess.run(args=command, shell=True, check=True)
-      env:
-        DEPENDENCIES_COMMAND: inputs.install-dependencies-command
+        source venv/bin/activate
+        $b=$(echo ${{inputs}})
+        z=$(python <(echo 'import sys ; print(sys.argv[1])') "$@" "$b")
+        echo $z
 
-    - name: Run test command
-      if: ${{ inputs.test-command != '' }}
-      shell: venv/bin/activate
-      run: |
-        import os
-        import subprocess
-        subprocess.run(args=os.environ.get("TEST_COMMAND"), shell=True, check=True)
-      env:
-        TEST_COMMAND: inputs.test-command
-
-
+#    - name: Install dependencies command
+#      if: ${{ inputs.install-dependencies-command != '' }}
+#      shell: python
+#      run: |
+#        import os
+#        import subprocess
+#        command = "source venv/bin/activate && " + os.environ.get("DEPENDENCIES_COMMAND")
+#        subprocess.run(args=command, shell=True, check=True)
+#      env:
+#        DEPENDENCIES_COMMAND: inputs.install-dependencies-command
+#
+#    - name: Run test command
+#      if: ${{ inputs.test-command != '' }}
+#      shell: venv/bin/activate
+#      run: |
+#        import os
+#        import subprocess
+#        subprocess.run(args=os.environ.get("TEST_COMMAND"), shell=True, check=True)
+#      env:
+#        TEST_COMMAND: inputs.test-command
+#
+#    - name: Build Dependencies for Twine
+#      if: ${{ inputs.publish-package-using == 'twine' && inputs.custom-build-command == '' }}
+#      shell: bash
+#      run: |
+#        source venv/bin/activate
+#        pip install twine wheel setuptools
+#
+#    - name: Build Twine
+#      if: ${{ inputs.publish-package-using == 'twine' && inputs.custom-build-command == '' }}
+#      shell: bash
+#      run: |
+#        source venv/bin/activate
+#        python setup.py sdist bdist_wheel
+#
+#    - name: Upload Twine
+#      if: ${{ inputs.publish-package-using == 'twine' }}
+#      shell: bash
+#      run: |
+#        twine upload dist/*
+#      env:
+#        TWINE_USERNAME: ${{ inputs.
     
     
 
