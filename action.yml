@@ -165,13 +165,14 @@ runs:
         new_env_variables = {}
         for k in keys:
           new_key = k.replace("-env-name", "")
-          if inputs.get(new_key, None) is not None and inputs.get(new_key) != '':
-            new_env_variables["KASSETT_{}".format(new_key.upper().replace("-", "_"))] = inputs[new_key]
-          else:
-            new_env_variables["KASSETT_{}".format(new_key.upper().replace("-", "_"))] = os.environ.get(inputs[k])
-          del inputs[k]
-          if inputs.get(new_key, None) is not None:
+          var_name = "KASSETT_{}".format(new_key.upper().replace("-", "_"))
+          if new_key in inputs and inputs[new_key] != '':
+            new_env_variables[var_name] = inputs[new_key]
             del inputs[new_key]
+          else:
+            new_env_variables[var_name] = os.environ.get(inputs[k])
+          del inputs[k]
+            
         for k, v in inputs.items():
           if k == "aws-secrets":
             continue
