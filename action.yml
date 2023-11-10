@@ -153,7 +153,7 @@ runs:
     - name: Echo value
       shell: bash
       run: |
-        echo ${PYPI}
+        echo ${{ env.PYPI }}
 
     - name: Export ENV Variables
       shell: python
