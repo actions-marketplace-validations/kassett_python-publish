@@ -184,7 +184,7 @@ runs:
 
         with open(os.getenv('GITHUB_ENV'), "w") as f:
           for k, v in new_env_variables.items():
-            line = "=".join([k, v])
+            line = "=".join([k, '"{}"'.format(v)])
             f.write(line)
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
