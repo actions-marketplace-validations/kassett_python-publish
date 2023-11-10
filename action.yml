@@ -133,12 +133,20 @@ runs:
         aws-region: ${{ inputs.aws-region }}
         role-to-assume: ${{ inputs.aws-role }}
 
+    - name: Echo Secrets
+      shell: python
+      run:
+        import os
+        print(os.environ.get("SECRET_IDS"))
+      env:
+        SECRET_IDS: ${{ inputs.aws-keys }}
+
     - name: Grab AWS Keys
       if: ${{ inputs.aws-keys != '' }}
       uses: aws-actions/aws-secretsmanager-get-secrets@v1
       with:
         secret-ids: |
-          ${{ inputs.aws_keys }}
+          ${{ inputs.aws-keys }}
         parse-json-secrets: true
 
     - name: Build Virtual Env
