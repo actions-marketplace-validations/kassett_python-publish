@@ -20,6 +20,7 @@ inputs:
   install-dependencies-command:
     description: 'Run the command required to build the Python dependencies.'
     required: false
+    default: ''
   build-package-using-twine:
     description: 'Build the Python SDK using twine.'
     required: false
@@ -117,6 +118,17 @@ runs:
         source venv/bin/activate
         python -m pip install --upgrade pip
         pip install poetry
+
+    - name: Install dependencies command
+      if: ${{ inputs.install-dependencies-command != '' }}
+      shell: python
+      run: |
+        import os
+        import subprocess
+        command = "source venv/bin/activate && " + os.environ.get("DEPENDENCIES_COMMAND")
+        subprocess.run(args=command, shell=True, check=True)
+      env:
+        DEPENDENCIES_COMMAND: inputs.install-dependencies-command
 
     - name: Run test command
       if: ${{ inputs.test-command != '' }}
