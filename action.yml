@@ -143,7 +143,7 @@ runs:
 
     - name: Echo Secrets
       shell: python
-      run:
+      run: |
         import os
         print(os.environ.get("SECRET_IDS"))
       env:
