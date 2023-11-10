@@ -175,17 +175,20 @@ runs:
         for k, v in inputs.items():
           if k == "aws-secrets":
             continue
+          if " " in v and not v.startswith("\""):
+            v = '"{}"'.format(v)
           new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
           new_env_variables[new_key] = v
         for k, v in os.environ.items():
+          if " " in v and not v.startswith("\""):
+            v = '"{}"'.format(v)
           if k != "KASSETT_INPUTS":
             new_env_variables[k] = v
         
         env_file = os.getenv('GITHUB_ENV')
-        print(os.getenv('GITHUB_ENV'))
       
         lines = ["{}={}".format(k, v) for k, v in new_env_variables.items()]
-        with open(env_file, "a") as f:
+        with open(env_file, "w") as f:
             f.write("\n".join(lines))
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
