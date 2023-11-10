@@ -156,13 +156,42 @@ runs:
         pip install poetry
 
     - name: Export ENV Variables
-      shell: bash
+      shell: python
       run: |
-        source venv/bin/activate
-        z=$(python <(echo 'import sys ; import os ; print(os.environ.get("ALL_INPUTS")') "$@" )
-        echo $z
+        import os
+        import json
+        
+        inputs = json.loads(os.environ.get("KASSETT_INPUTS"))
+        keys = [x for x in inputs.keys() if x.endswith("-env-name")]
+        new_env_variables = {}
+        for k in keys:
+          new_key = k.replace("-env-name", "")
+          if os.environ.get(new_key, None) is not None and os.environ.get(new_key) != '':
+            new_env_variables["KASSETT_{}".format(new_key.upper().replace("-", "")] = inputs[new_key]
+          else:
+            new_env_variables["KASSETT_{}".format(new_key.upper().replace("-", "")] = inputs[k]
+          del inputs[k]
+          if os.environ.get(new_key, None) is not None:
+            del inputs[new_key]
+        for k, v in inputs.items():
+          new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
+          new_env_variables[new_key] = v
+        for k, v in os.environ.items():
+          if k != "KASSETT_INPUTS":
+            new_env_variables[k] = v
+
+        with open(os.getenv('GITHUB_ENV'), "w") as f:
+          for k, v in new_env_variables.items():
+            line = "=".join([k, v])
+            f.write(line)
       env:
-        ALL_INPUTS: ${{toJSON(inputs)}}
+        KASSETT_INPUTS: ${{toJSON(inputs)}}
+
+    - name: Print Env
+      shell: python
+      run: |
+        import os
+        print(os.environ)
 
 #    - name: Install dependencies command
 #      if: ${{ inputs.install-dependencies-command != '' }}
