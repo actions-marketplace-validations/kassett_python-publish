@@ -121,11 +121,6 @@ runs:
       env:
         PYTHONPATH: ${{ inputs.python-path }}
 
-    - name: Install jq
-      run:
-        sudo apt-get install jq
-      shell: bash
-
     - name: Set up Python 3.9
       uses: actions/setup-python@v3
       with:
@@ -150,11 +145,6 @@ runs:
 #      with:
 #        secret-ids: ${{ inputs.aws_keys }}
 #        parse-json-secrets: true
-
-    - name: Define ENV Variables
-      shell: bash
-      run: |
-        $z
         
 
     - name: Build Virtual Env
