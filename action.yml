@@ -149,6 +149,12 @@ runs:
           ${{ inputs.aws-keys }}
         parse-json-secrets: true
 
+
+    - name: Echo value
+      shell: bash
+      run: |
+        echo ${PYPI}
+
     - name: Export ENV Variables
       shell: python
       run: |
