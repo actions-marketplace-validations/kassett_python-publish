@@ -141,14 +141,6 @@ runs:
         python -m pip install --upgrade pip
         pip install poetry
 
-    - name: Echo Secrets
-      shell: python
-      run: |
-        import os
-        print(os.environ.get("SECRET_IDS"))
-      env:
-        SECRET_IDS: ${{ inputs.aws-keys }}
-
     - name: Grab AWS Keys
       if: ${{ inputs.aws-keys != '' }}
       uses: aws-actions/aws-secretsmanager-get-secrets@v1
