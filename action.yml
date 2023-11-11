@@ -15,7 +15,7 @@ inputs:
     default: "false"
 
   connect-to-vpn:
-    description: 'The name of the VPN to connect. All OpenVPN compliant VPNs are supports, as well as Tailscale.'
+    description: 'The name of the VPN to connect. Currently Pritunl and Tailscale are supported.'
     required: false
     default: ''
 
@@ -60,17 +60,14 @@ inputs:
     description: 'The url for the PyPI repo. Defaults to https://pypi.org/'
     default: "https://pypi.org/"
     required: false
-
   pypi-repo-url-env-name:
     description: "The name of the environment variables that contains the PyPI url."
     default: ''
     required: false
-
   pypi-repo-name:
     description: "The name of the PyPI repo."
     default: ''
     required: false
-
   pypi-repo-name-env-name:
     description: "The environment variable that contains the name of the PyPI repo."
     default: ''
@@ -98,7 +95,6 @@ inputs:
     description: 'The Auth Key required to connect to Tailscale.'
     required: false
     default: ''
-
   tailscale-auth-key-env-name:
     description: 'The name of the environment variable in which the Auth Key resides.'
     required: false
@@ -108,7 +104,6 @@ inputs:
     description: 'The client id for connecting to Tailscale.'
     required: false
     default: ''
-
   tailscale-oauth-client-id-env-name:
     description: 'The name of the environment variable in which the Tailscale client id resides.'
     required: false
@@ -118,7 +113,6 @@ inputs:
     description: 'The secret for connecting to Tailscale.'
     required: false
     default: ''
-
   tailscale-oauth-secret-env-name:
     description: 'The name of the environment variable in which the Tailscale secret resides.'
     required: false
@@ -128,7 +122,6 @@ inputs:
     description: 'The tags required for connecting to Tailscale.'
     required: false
     default: ''
-
   tailscale-tags-env-name:
     description: 'The name of the environment variable in which the Tailscale tags reside.'
     required: false
@@ -142,6 +135,7 @@ inputs:
     description: 'The name of the environment variable for the profile config file for Pritunl.'
     required: false
     default: ''
+
   pritunl-profile-server:
     description: 'The name of the Pritunl profile server.'
     required: false
@@ -150,6 +144,7 @@ inputs:
     description: 'The name of the environment variable for the Pritunl profile server.'
     required: false
     default: ''
+
   pritunl-profile-pin:
     description: 'The name of the Pritunl profile pin.'
     required: false
@@ -158,8 +153,6 @@ inputs:
     description: 'The name of the environment variable for the Pritunl profile pin.'
     required: false
     default: ''
-
-
 
 runs:
   using: composite
@@ -199,14 +192,6 @@ runs:
         aws-region: ${{ inputs.aws-region }}
         role-to-assume: ${{ inputs.aws-role }}
 
-    - name: Build Virtual Env
-      shell: bash
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        python -m pip install --upgrade pip
-        pip install poetry
-
     - name: Grab AWS Keys
       if: ${{ inputs.aws-keys != '' }}
       uses: aws-actions/aws-secretsmanager-get-secrets@v1
@@ -215,10 +200,13 @@ runs:
           ${{ inputs.aws-keys }}
         parse-json-secrets: true
 
-    - name: Echo value
+    - name: Build Virtual Env
       shell: bash
       run: |
-        echo ${{ env.PYPI }}
+        python -m venv venv
+        source venv/bin/activate
+        python -m pip install --upgrade pip
+        pip install poetry
 
     - name: Export ENV Variables
       shell: python
@@ -260,6 +248,23 @@ runs:
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
 
+    - name: Connect to Tailscale
+      if: ${{ inputs.connect-to-vpn == 'tailscale' }}
+      uses: tailscale/github-action@v2
+      with:
+        oauth-client-id: ${{ env.KASSETT_TAILSCALE_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ env.KASSETT_TAILSCALE_OAUTH_SECRET }}
+        tags: ${{ env.KASSETT_TAILSCALE_TAGS }}
+        authkey: ${{ env.KASSETT_TAILSCALE_AUTHKEY }}
+
+    - name: Connect to Pritunl
+      if: ${{ inputs.connect-to-vpn == 'pritunl' }}
+      uses: nathanielvarona/pritunl-client-github-action@v1
+      with:
+        profile-file: ${{ env.KASSETT_PRITUNL_PROFILE_FILE }}
+        profile-pin: ${{ env.KASSETT_PRITUNL_PROFILE_PIN }}
+        profile-server: ${{ env.KASSETT_PRITUNL_PROFILE_SERVER }}
+
     - name: Install dependencies command
       if: ${{ env.KASSETT_INSTALL_DEPENDENCIES_COMMAND != '' }}
       shell: python
@@ -268,7 +273,6 @@ runs:
         import subprocess
         command = "source venv/bin/activate && " + os.environ.get("KASSETT_INSTALL_DEPENDENCIES_COMMAND")
         subprocess.run(args=command, shell=True, check=True)
-        
 
     - name: Run test command
       if: ${{ env.KASSETT_TEST_COMMAND != '' }}
