@@ -297,33 +297,34 @@ runs:
         inputs = json.loads(os.environ.get("KASSETT_INPUTS"))
         keys = [x for x in inputs.keys() if x.endswith("-env-name")]
         new_env_variables = {}
-        
+        banned_keys = []
+      
         for k in keys:
           new_key = k.replace("-env-name", "")
           var_name = "KASSETT_{}".format(new_key.upper().replace("-", "_"))
           if new_key in inputs and inputs[new_key] != '' and inputs[new_key] != "''":
             new_env_variables[var_name] = inputs[new_key]
-            del inputs[new_key]
+            
           else:
             if inputs[k] is not None and inputs[k] in os.environ:
               new_env_variables[var_name] = os.environ[inputs[k]]
-          del inputs[k]
-        
-        new_env_variables["KASSETT_INPUTS"] = ""
+          banned_keys.append(new_key)
+          banned_keys.append(k)
             
+        new_env_variables["KASSETT_INPUTS"] = ""
+          
         for k, v in inputs.items():
-          if k == "aws-secrets":
-            continue
-          if " " in v and not v.startswith("\""):
-            v = '"{}"'.format(v)
-          new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
-          new_env_variables[new_key] = v
-        
+          if k not in banned_keys:
+            if " " in v and not v.startswith("\""):
+              v = '"{}"'.format(v)
+            new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
+            new_env_variables[new_key] = v
+            
         env_file = os.getenv('GITHUB_ENV')
-      
+            
         lines = ["{}={}".format(k, v) for k, v in new_env_variables.items()]
         with open(env_file, "a") as f:
-            f.write("\n".join(lines))
+          f.write("\n".join(lines))
       env:
         KASSETT_INPUTS: ${{toJSON(inputs)}}
 
