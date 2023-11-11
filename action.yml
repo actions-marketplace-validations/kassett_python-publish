@@ -254,7 +254,7 @@ runs:
     - name: Echo secret
       shell: bash
       run: |
-        echo $KASSETT_TAILSCALE_OAUTH_CLIENT_ID
+        echo "$KASSETT_TAILSCALE_OAUTH_CLIENT_ID"
 
     - name: Connect to Tailscale
       if: ${{ inputs.connect-to-vpn == 'tailscale' }}
