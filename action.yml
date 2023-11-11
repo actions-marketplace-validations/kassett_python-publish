@@ -157,7 +157,7 @@ inputs:
 runs:
   using: composite
   steps:
-      # Install docker if the client has specified the value as 'true'
+    # Install docker if the client has specified the value as 'true'
     - name: Install Docker Compose
       if: ${{ inputs.install-docker != 'false' }}
       uses: ndeloof/install-compose-action@v0.0.1
@@ -168,6 +168,7 @@ runs:
       if: ${{ inputs.install-docker != 'false' }}
       uses: docker/setup-buildx-action@v2
 
+    # Export the Python Path for running tests and other custom commands
     - name: Export Python Path
       if: ${{ inputs.python-path != '' }}
       run: echo "PYTHONPATH=$(echo '$PYTHONPATH' | cut -c 1-6)" >> $GITHUB_ENV
@@ -175,7 +176,8 @@ runs:
       env:
         PYTHONPATH: ${{ inputs.python-path }}
 
-    - name: Set up Python 3.9
+    # Setup up Python with custom version -- must be supported by v3
+    - name: Set up Python x
       uses: actions/setup-python@v3
       with:
         python-version: ${{ inputs.python-version }}
@@ -192,6 +194,7 @@ runs:
         aws-region: ${{ inputs.aws-region }}
         role-to-assume: ${{ inputs.aws-role }}
 
+    # Extract AWS secrets
     - name: Grab AWS Keys
       if: ${{ inputs.aws-keys != '' }}
       uses: aws-actions/aws-secretsmanager-get-secrets@v1
@@ -267,21 +270,17 @@ runs:
 
     - name: Install dependencies command
       if: ${{ env.KASSETT_INSTALL_DEPENDENCIES_COMMAND != '' }}
-      shell: python
+      shell: bash
       run: |
-        import os
-        import subprocess
-        command = "source venv/bin/activate && " + os.environ.get("KASSETT_INSTALL_DEPENDENCIES_COMMAND")
-        subprocess.run(args=command, shell=True, check=True)
+        source venv/bin/activate
+        eval "$KASSETT_INSTALL_DEPENDENCIES_COMMAND"
 
     - name: Run test command
       if: ${{ env.KASSETT_TEST_COMMAND != '' }}
-      shell: python
+      shell: bash
       run: |
-        import os
-        import subprocess
-        command = "source venv/bin/activate ; " + os.environ.get("KASSETT_TEST_COMMAND")
-        subprocess.run(args=command, shell=True, check=True)
+        source venv/bin/activate
+        eval "$KASSETT_TEST_COMMAND"
 
     - name: Build Dependencies for Twine
       if: ${{ env.KASSETT_PUBLISH_PACKAGE_USING == 'twine' && env.KASSETT_CUSTOM_BUILD_COMMAND == '' }}
@@ -299,12 +298,10 @@ runs:
 
     - name: Custom Build
       if: ${{ env.KASSETT_CUSTOM_BUILD_COMMAND != '' }}
-      shell: python
+      shell: bash
       run: |
-        import os
-        import subprocess
-        command = "source venv/bin/activate ; " + os.environ.get("KASSETT_CUSTOM_BUILD_COMMAND")
-        subprocess.run(args=command, shell=True, check=True)
+        source venv/bin/activate
+        eval "$KASSETT_CUSTOM_BUILD_COMMAND"
 
     - name: Upload Twine
       if: ${{ env.KASSETT_PUBLISH_PACKAGE_USING == 'twine' }}
