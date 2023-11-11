@@ -210,7 +210,7 @@ runs:
 
     # Extract AWS secrets
     - name: Grab AWS Keys
-      if: ${{ inputs.aws-secrets != '' }}
+      if: ${{ inputs.aws-secrets != '' && inputs.aws-region != '' }}
       shell: python
       run: |
         import boto3
