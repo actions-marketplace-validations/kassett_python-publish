@@ -80,7 +80,6 @@ inputs:
     description: 'Username for pypi.org. Defaults to __token__.'
     required: false
     default: '__token__'
-
   pypi-username-env-name:
     description: 'Password for pypi.org.'
     required: false
@@ -93,6 +92,73 @@ inputs:
   pypi-password-env-name:
     description: 'The name of the environment variable in which the PyPI password resides.'
     required: false
+    default: ''
+
+  tailscale-auth-key:
+    description: 'The Auth Key required to connect to Tailscale.'
+    required: false
+    default: ''
+
+  tailscale-auth-key-env-name:
+    description: 'The name of the environment variable in which the Auth Key resides.'
+    required: false
+    default: ''
+
+  tailscale-oauth-client-id:
+    description: 'The client id for connecting to Tailscale.'
+    required: false
+    default: ''
+
+  tailscale-oauth-client-id-env-name:
+    description: 'The name of the environment variable in which the Tailscale client id resides.'
+    required: false
+    default: ''
+
+  tailscale-oauth-secret:
+    description: 'The secret for connecting to Tailscale.'
+    required: false
+    default: ''
+
+  tailscale-oauth-secret-env-name:
+    description: 'The name of the environment variable in which the Tailscale secret resides.'
+    required: false
+    default: ''
+
+  tailscale-tags:
+    description: 'The tags required for connecting to Tailscale.'
+    required: false
+    default: ''
+
+  tailscale-tags-env-name:
+    description: 'The name of the environment variable in which the Tailscale tags reside.'
+    required: false
+    default: ''
+
+  pritunl-profile-file:
+    description: 'The profile config file for Pritunl.'
+    required: false
+    default: ''
+  pritunl-profile-file-env-name:
+    description: 'The name of the environment variable for the profile config file for Pritunl.'
+    required: false
+    default: ''
+  pritunl-profile-server:
+    description: 'The name of the Pritunl profile server.'
+    required: false
+    default: ''
+  pritunl-profile-server-env-name:
+    description: 'The name of the environment variable for the Pritunl profile server.'
+    required: false
+    default: ''
+  pritunl-profile-pin:
+    description: 'The name of the Pritunl profile pin.'
+    required: false
+    default: 'No Pin'
+  pritunl-profile-pin-env-name:
+    description: 'The name of the environment variable for the Pritunl profile pin.'
+    required: false
+    default: ''
+
 
 
 runs:
