@@ -305,7 +305,8 @@ runs:
             new_env_variables[var_name] = inputs[new_key]
             del inputs[new_key]
           else:
-            new_env_variables[var_name] = os.environ[inputs[k]]
+            if inputs[k] is not None and inputs[k] in os.environ:
+              new_env_variables[var_name] = os.environ[inputs[k]]
           del inputs[k]
         
         new_env_variables["KASSETT_INPUTS"] = ""
