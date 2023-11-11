@@ -194,6 +194,20 @@ runs:
         aws-region: ${{ inputs.aws-region }}
         role-to-assume: ${{ inputs.aws-role }}
 
+    - name: Build Virtual Env
+      shell: bash
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        python -m pip install --upgrade pip
+        pip install poetry
+
+    - name: Install boto3
+      if: ${{ inputs.aws-secrets != '' }}
+      shell: bash
+      run: |
+        pip install boto3
+
     # Extract AWS secrets
     - name: Grab AWS Keys
       if: ${{ inputs.aws-secrets != '' }}
@@ -273,14 +287,6 @@ runs:
                 f.write(line)
       env:
         AWS_KEYS: ${{ inputs.aws-secrets }}
-
-    - name: Build Virtual Env
-      shell: bash
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        python -m pip install --upgrade pip
-        pip install poetry
 
     - name: Export ENV Variables
       shell: python
