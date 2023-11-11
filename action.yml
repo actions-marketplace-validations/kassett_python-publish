@@ -339,13 +339,25 @@ runs:
       run: |
         echo "$KASSETT_TAILSCALE_OAUTH_CLIENT_ID"
 
-    - name: Connect to Tailscale
-      if: ${{ inputs.connect-to-vpn == 'tailscale' }}
+    # I am doing this because of some weird functionality in the Tailscale action
+    # where they don't differentiate between not including a value and listing at ''
+    - name: Connect to Tailscale With Tags
+      if: ${{ inputs.connect-to-vpn == 'tailscale' and env.KASSETT_TAILSCALE_TAGS != '' }}
       uses: tailscale/github-action@v2
       with:
         oauth-client-id: ${{ env.KASSETT_TAILSCALE_OAUTH_CLIENT_ID }}
         oauth-secret: ${{ env.KASSETT_TAILSCALE_OAUTH_SECRET }}
         tags: ${{ env.KASSETT_TAILSCALE_TAGS }}
+        authkey: ${{ env.KASSETT_TAILSCALE_AUTHKEY }}
+
+    # I am doing this because of some weird functionality in the Tailscale action
+    # where they don't differentiate between not including a value and listing at ''
+    - name: Connect to Tailscale Without Tags
+      if: ${{ inputs.connect-to-vpn == 'tailscale' and env.KASSETT_TAILSCALE_TAGS == '' }}
+      uses: tailscale/github-action@v2
+      with:
+        oauth-client-id: ${{ env.KASSETT_TAILSCALE_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ env.KASSETT_TAILSCALE_OAUTH_SECRET }}
         authkey: ${{ env.KASSETT_TAILSCALE_AUTHKEY }}
 
     - name: Connect to Pritunl
