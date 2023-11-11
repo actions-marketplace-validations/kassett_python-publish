@@ -249,7 +249,7 @@ runs:
         with open(env_file, "w") as f:
             f.write("\n".join(lines))
       env:
-        KASSETT_INPUTS: ${{toJSON(inputs)}}\
+        KASSETT_INPUTS: ${{toJSON(inputs)}}
 
     - name: Echo secret
       shell: bash
