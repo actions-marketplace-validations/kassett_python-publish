@@ -200,6 +200,7 @@ runs:
       if: ${{ inputs.aws-secrets != '' }}
       shell: bash
       run: |
+        sudo apt-get update && sudo apt-get install make
         pip install boto3
 
     # Extract AWS secrets
