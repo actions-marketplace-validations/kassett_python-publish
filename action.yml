@@ -197,11 +197,82 @@ runs:
     # Extract AWS secrets
     - name: Grab AWS Keys
       if: ${{ inputs.aws-keys != '' }}
-      uses: aws-actions/aws-secretsmanager-get-secrets@v1
-      with:
-        secret-ids: |
-          ${{ inputs.aws-keys }}
-        parse-json-secrets: true
+      shell: python
+      run: |
+        import boto3
+        import os
+        import json
+
+        def is_valid_json(my_json):
+            try:
+                _ = json.loads(my_json)
+            except ValueError as e:
+                return False
+            return True
+
+
+        i = os.environ.get("AWS_KEYS")
+        inputs = i.split(",")
+        secrets_to_retrieve = []
+        put = {}
+        for i in inputs:
+            temp = {}
+            if "=" in i:
+                t = i.split("=")
+            else:
+                t = ["", i]
+            if t[1].endswith("*"):
+                temp["secret_name_prefix"] = t[1][0:-1]
+            else:
+                temp["secret_name"] = t[1]
+            if t[0].endswith("*"):
+                temp["env_name_prefix"] = t[0][0:-1]
+            else:
+                if t[0] != "":
+                    temp["env_name"] = t[0]
+            secrets_to_retrieve.append(temp)
+
+        client = boto3.client('secretsmanager')
+        paginator = client.get_paginator('list_secrets')
+        for page in paginator.paginate():
+            for name in page['SecretList']:
+                i = next((i for i, x in enumerate(secrets_to_retrieve) if "secret_name" in x
+                          and x["secret_name"] == name["Name"]), None)
+                if i is not None:
+                    secrets_to_retrieve[i]["arn"] = name["ARN"]
+                i = next((i for i, x in enumerate(secrets_to_retrieve) if "secret_name_prefix" in x and name["Name"].startswith(x["secret_name_prefix"])), None)
+                if i is not None:
+                    secrets_to_retrieve[i]["arn"] = name["ARN"]
+
+        for secret in secrets_to_retrieve:
+            value = client.get_secret_value(SecretId=secret['arn'])
+            if is_valid_json(value["SecretString"]):
+                secret_string = json.loads(value["SecretString"])
+                prefix = ""
+                if "env_name" in secret:
+                    prefix = secret["env_name"]
+                elif "env_name_prefix" in secret:
+                    prefix = secret["env_name_prefix"]
+                else:
+                    prefix = ""
+                for k, v in secret_string.items():
+                    k = prefix + k.upper().replace("-", "_")
+                    put[k] = v
+            else:
+                if "env_name" in secret:
+                    put[secret["env_name"]] = value["SecretString"]
+                elif "env_name_prefix" in secret:
+                    put[secret["env_name_prefix"]] = value["SecretString"]
+                else:
+                    put[value["Name"].upper().replace("-", "_")] = value["SecretString"]
+
+        env_file = os.getenv('GITHUB_ENV')
+        with open(env_file, "a") as f:
+            for k, v in put.items():
+                line = "{}={}".format(k, v)
+                f.write(line)
+      env:
+        AWS_KEYS: ${{ env.aws-keys }}
 
     - name: Build Virtual Env
       shell: bash
