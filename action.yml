@@ -272,7 +272,7 @@ runs:
                 line = "{}={}".format(k, v)
                 f.write(line)
       env:
-        AWS_KEYS: ${{ env.aws-keys }}
+        AWS_KEYS: ${{ inputs.aws-keys }}
 
     - name: Build Virtual Env
       shell: bash
