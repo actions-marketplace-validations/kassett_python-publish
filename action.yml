@@ -279,12 +279,11 @@ runs:
                     put[secret["env_name_prefix"]] = value["SecretString"]
                 else:
                     put[value["Name"].upper().replace("-", "_")] = value["SecretString"]
-
+        
+        lines = ["{}={}".format(k, v) for k, v in put.items()]
         env_file = os.getenv('GITHUB_ENV')
         with open(env_file, "a") as f:
-            for k, v in put.items():
-                line = "{}={}".format(k, v)
-                f.write(line)
+            f.write("\n".join(lines))
       env:
         AWS_KEYS: ${{ inputs.aws-secrets }}
         AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
