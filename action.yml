@@ -91,15 +91,6 @@ inputs:
     required: false
     default: ''
 
-  tailscale-auth-key:
-    description: 'The Auth Key required to connect to Tailscale.'
-    required: false
-    default: ''
-  tailscale-auth-key-env-name:
-    description: 'The name of the environment variable in which the Auth Key resides.'
-    required: false
-    default: ''
-
   tailscale-oauth-client-id:
     description: 'The client id for connecting to Tailscale.'
     required: false
@@ -157,6 +148,9 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
     # Install docker if the client has specified the value as 'true'
     - name: Install Docker Compose
       if: ${{ inputs.install-docker != 'false' }}
