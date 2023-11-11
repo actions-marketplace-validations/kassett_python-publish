@@ -294,9 +294,16 @@ runs:
         import os
         import json
         
-        inputs = os.environ.get("KASSETT_INPUTS")
+        inputs = json.loads(os.environ.get("KASSETT_INPUTS"))
         keys = [x for x in inputs.keys() if x.endswith("-env-name")]
         new_env_variables = {}
+        
+        for k, v in os.environ.items():
+          if " " in v and not v.startswith("\""):
+            v = '"{}"'.format(v)
+          if k != "KASSETT_INPUTS":
+            new_env_variables[k] = v
+        
         for k in keys:
           new_key = k.replace("-env-name", "")
           var_name = "KASSETT_{}".format(new_key.upper().replace("-", "_"))
@@ -314,11 +321,6 @@ runs:
             v = '"{}"'.format(v)
           new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
           new_env_variables[new_key] = v
-        for k, v in os.environ.items():
-          if " " in v and not v.startswith("\""):
-            v = '"{}"'.format(v)
-          if k != "KASSETT_INPUTS":
-            new_env_variables[k] = v
         
         env_file = os.getenv('GITHUB_ENV')
       
