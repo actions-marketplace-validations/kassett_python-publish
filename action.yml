@@ -249,7 +249,12 @@ runs:
         with open(env_file, "w") as f:
             f.write("\n".join(lines))
       env:
-        KASSETT_INPUTS: ${{toJSON(inputs)}}
+        KASSETT_INPUTS: ${{toJSON(inputs)}}\
+
+    - name: Echo secret
+      shell: bash
+      run: |
+        echo $KASSETT_TAILSCALE_OAUTH_CLIENT_ID
 
     - name: Connect to Tailscale
       if: ${{ inputs.connect-to-vpn == 'tailscale' }}
