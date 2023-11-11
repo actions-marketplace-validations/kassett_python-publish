@@ -310,8 +310,6 @@ runs:
         for k, v in inputs.items():
           if k == "aws-secrets":
             continue
-          if v == '':
-            continue
           if " " in v and not v.startswith("\""):
             v = '"{}"'.format(v)
           new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
