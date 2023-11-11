@@ -324,7 +324,7 @@ runs:
             
         for r in required:
           if r not in new_env_variables:
-            new_env_variables[r] = ""
+            new_env_variables[r] = "''"
         
         env_file = os.getenv('GITHUB_ENV')
             
