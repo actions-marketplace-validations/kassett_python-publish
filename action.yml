@@ -294,7 +294,7 @@ runs:
         import os
         import json
         
-        inputs = json.loads(os.environ.get("KASSETT_INPUTS"))
+        inputs = os.environ.get("KASSETT_INPUTS")
         keys = [x for x in inputs.keys() if x.endswith("-env-name")]
         new_env_variables = {}
         for k in keys:
