@@ -298,10 +298,12 @@ runs:
         keys = [x for x in inputs.keys() if x.endswith("-env-name")]
         new_env_variables = {}
         banned_keys = []
+        required = []
       
         for k in keys:
           new_key = k.replace("-env-name", "")
           var_name = "KASSETT_{}".format(new_key.upper().replace("-", "_"))
+          required.append(var_name)
           if new_key in inputs and inputs[new_key] != '' and inputs[new_key] != "''":
             new_env_variables[var_name] = inputs[new_key]
             
@@ -320,6 +322,10 @@ runs:
             new_key = "KASSETT_{}".format(k.upper().replace("-", "_"))
             new_env_variables[new_key] = v
             
+        for r in required:
+          if r not in new_env_variables:
+            new_env_variables[r] = ""
+        
         env_file = os.getenv('GITHUB_ENV')
             
         lines = ["{}={}".format(k, v) for k, v in new_env_variables.items()]
