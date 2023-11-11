@@ -196,7 +196,7 @@ runs:
 
     # Extract AWS secrets
     - name: Grab AWS Keys
-      if: ${{ inputs.aws-keys != '' }}
+      if: ${{ inputs.aws-secrets != '' }}
       shell: python
       run: |
         import boto3
@@ -272,7 +272,7 @@ runs:
                 line = "{}={}".format(k, v)
                 f.write(line)
       env:
-        AWS_KEYS: ${{ inputs.aws-keys }}
+        AWS_KEYS: ${{ inputs.aws-secrets }}
 
     - name: Build Virtual Env
       shell: bash
