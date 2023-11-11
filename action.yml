@@ -354,7 +354,7 @@ runs:
     # where they don't differentiate between not including a value and listing at ''
     - name: Connect to Tailscale Without Tags
       if: ${{ inputs.connect-to-vpn == 'tailscale' && env.KASSETT_TAILSCALE_TAGS == '' }}
-      uses: tailscale/github-action@v2
+      uses: tailscale/github-action@v1
       with:
         authkey: ${{ env.KASSETT_TAILSCALE_AUTHKEY }}
 
