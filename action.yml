@@ -23,7 +23,7 @@ inputs:
     description: 'AWS role to assume.'
     default: ''
     required: false
-  aws-role-region:
+  aws-region:
     description: 'AWS role region.'
     default: ''
     required: false
@@ -287,6 +287,7 @@ runs:
                 f.write(line)
       env:
         AWS_KEYS: ${{ inputs.aws-secrets }}
+        AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
 
     - name: Export ENV Variables
       shell: python
