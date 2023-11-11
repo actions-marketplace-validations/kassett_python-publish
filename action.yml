@@ -196,10 +196,11 @@ runs:
         python -m pip install --upgrade pip
         pip install poetry
 
-    - name: Install boto3
+    - name: Install Other Dependencies
       if: ${{ inputs.aws-secrets != '' }}
       shell: bash
       run: |
+        sudo apt install build-essential
         sudo apt-get update && sudo apt-get install make
         pip install boto3
 
