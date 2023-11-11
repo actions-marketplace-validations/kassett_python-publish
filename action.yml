@@ -301,7 +301,7 @@ runs:
         for k in keys:
           new_key = k.replace("-env-name", "")
           var_name = "KASSETT_{}".format(new_key.upper().replace("-", "_"))
-          if new_key in inputs and inputs[new_key] != '':
+          if new_key in inputs and inputs[new_key] != '' and inputs[new_key] != "''":
             new_env_variables[var_name] = inputs[new_key]
             del inputs[new_key]
           else:
